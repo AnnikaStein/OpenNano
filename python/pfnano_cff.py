@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.PFNano.addPFCands_cff import addPFCands
 from PhysicsTools.PFNano.addBTV import add_BTV
+from PhysicsTools.PFNano.addJetTagInfo import add_CustomTagger
 from PhysicsTools.NanoAOD.common_cff import Var
 
 # keepInputs can take DeepCSV, DeepJet and DDX (any combination, or use empty placeholder list if no inputs are required)
@@ -61,6 +62,11 @@ def PFnano_customizeMC_noInputs(process):
     process.NANOAODSIMoutput.fakeNameForCrab = cms.untracked.bool(True)  # needed for crab publication
     return process
 
+def PFnano_customizeMC_allPF_add_CustomTagger_and_Truth(process):
+    addPFCands(process, True, True)
+    add_CustomTagger(process, True, keepInputs=['CustomTagger'], storeAK4Truth="yes")
+    process.NANOAODSIMoutput.fakeNameForCrab = cms.untracked.bool(True)  # needed for crab publication
+    return process
 
 #### DATA customization
 def PFnano_customizeData(process):
@@ -112,4 +118,10 @@ def PFnano_customizeData_AK8JetsOnly(process):
 def PFnano_customizeData_noInputs(process):
     add_BTV(process, False, keepInputs=[])
     process.NANOAODSIMoutput.fakeNameForCrab = cms.untracked.bool(True)  # needed for crab publication
+    return process
+
+def PFnano_customizeData_allPF_add_CustomTagger(process):
+    addPFCands(process, False, True)
+    add_CustomTagger(process, False, keepInputs=['CustomTagger'])
+    process.NANOAODoutput.fakeNameForCrab = cms.untracked.bool(True)  # needed for crab publication
     return process
