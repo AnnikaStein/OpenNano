@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: --python_filename custom_tt_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM --fileout file:custom_tt_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO --filein file:tt_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n 1000 --customise PhysicsTools/PFNano/pfnano_cff.PFnano_customizeMC_allPF_add_CustomTagger_and_Truth
+# with command line options: --python_filename custom_tt_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM --fileout file:custom_tt_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO --filein file:tt_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n 1000 --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_allPF_add_CustomTagger_and_Truth
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.Eras.Era_Run2_25ns_cff import Run2_25ns
@@ -80,11 +80,11 @@ from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeMC
 #call to customisation function nanoAOD_customizeMC imported from PhysicsTools.NanoAOD.nano_cff
 process = nanoAOD_customizeMC(process)
 
-# Automatic addition of the customisation function from PhysicsTools.PFNano.pfnano_cff
-from PhysicsTools.PFNano.pfnano_cff import PFnano_customizeMC_allPF_add_CustomTagger_and_Truth 
+# Automatic addition of the customisation function from PhysicsTools.OpenNano.opennano_cff
+from PhysicsTools.OpenNano.opennano_cff import Opennano_customizeMC_allPF_add_CustomTagger_and_Truth 
 
-#call to customisation function PFnano_customizeMC_allPF_add_CustomTagger_and_Truth imported from PhysicsTools.PFNano.pfnano_cff
-process = PFnano_customizeMC_allPF_add_CustomTagger_and_Truth(process)
+#call to customisation function Opennano_customizeMC_allPF_add_CustomTagger_and_Truth imported from PhysicsTools.OpenNano.opennano_cff
+process = Opennano_customizeMC_allPF_add_CustomTagger_and_Truth(process)
 
 # End of customisation functions
 

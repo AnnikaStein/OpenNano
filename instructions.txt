@@ -4,37 +4,38 @@ cd CMSSW_10_6_30/src/
 cmsenv
 git cms-init
 git cms-merge-topic 39040
-git clone -b opendata https://github.com/DAZSLE/PFNano.git PhysicsTools/PFNano
-scram b
+git clone -b opendata git@github.com:AnnikaStein/OpenNano.git PhysicsTools/OpenNano
+scram b -j 18
+voms-proxy-init --voms cms --vomses ~/.grid-security/vomses --valid 192:00
 
 
 xrdcp root://eospublic.cern.ch//eos/opendata/cms/Run2015D/DoubleMuon/MINIAOD/16Dec2015-v1/10000/00348932-30A8-E511-989A-00261894394A.root doublemuon_miniaod.root
 cmsDriver.py --python_filename doublemuon_cfg.py --eventcontent NANOAOD --datatier NANOAOD \
   --fileout file:doublemuon_nanoaod.root --conditions 106X_dataRun2_v36 --step NANO \
   --filein file:doublemuon_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --data -n -1 \
-  --customise PhysicsTools/PFNano/pfnano_cff.PFnano_customizeData_onlyPF
+  --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeData_onlyPF
 
 xrdcp root://eospublic.cern.ch//eos/opendata/cms/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/10000/06761E14-6ED8-E511-BBCD-0025905B85B2.root dy_miniaod.root
 cmsDriver.py --python_filename dy_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM \
   --fileout file:dy_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO \
   --filein file:dy_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n -1 \
-  --customise PhysicsTools/PFNano/pfnano_cff.PFnano_customizeMC_onlyPF
+  --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_onlyPF
   
 
 xrdcp root://eospublic.cern.ch//eos/opendata/cms/Run2015D/DoubleMuon/MINIAOD/16Dec2015-v1/10000/00348932-30A8-E511-989A-00261894394A.root doublemuon_miniaod.root
 cmsDriver.py --python_filename custom_doublemuon_cfg.py --eventcontent NANOAOD --datatier NANOAOD \
   --fileout file:custom_doublemuon_nanoaod.root --conditions 106X_dataRun2_v36 --step NANO \
   --filein file:doublemuon_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --data -n -1 \
-  --customise PhysicsTools/PFNano/pfnano_cff.PFnano_customizeData_allPF_add_CustomTagger
+  --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeData_allPF_add_CustomTagger
 
 xrdcp root://eospublic.cern.ch//eos/opendata/cms/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/10000/06761E14-6ED8-E511-BBCD-0025905B85B2.root dy_miniaod.root
 cmsDriver.py --python_filename custom_dy_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM \
   --fileout file:custom_dy_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO \
   --filein file:dy_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n -1 \
-  --customise PhysicsTools/PFNano/pfnano_cff.PFnano_customizeMC_allPF_add_CustomTagger_and_Truth
+  --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_allPF_add_CustomTagger_and_Truth
   
 xrdcp root://eospublic.cern.ch//eos/opendata/cms/mc/RunIIFall15MiniAODv2/TTToSemiLeptonic_13TeV-powheg/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/00000/001CCEB6-4EC4-E511-B8DC-00259074AEAC.root tt_miniaod.root
 cmsDriver.py --python_filename custom_tt_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM \
   --fileout file:custom_tt_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO \
   --filein file:tt_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n 1000 \
-  --customise PhysicsTools/PFNano/pfnano_cff.PFnano_customizeMC_allPF_add_CustomTagger_and_Truth
+  --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_allPF_add_CustomTagger_and_Truth

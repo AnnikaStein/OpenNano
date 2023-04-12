@@ -1,9 +1,6 @@
 # PFNano
 
-This is a [NanoAOD](https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookNanoAOD) framework for advanced developments of jet algorithms. 
-
-The repository consists of multiple branches which are each dedicated to specific releases of [CMSSW](https://github.com/cms-sw/cmssw). If you came here to run over Run3 samples, please checkout the most up-to-date 12_4_8 branch (e.g. from the dropdown menu above). The master branch you are viewing right now is optimized to run over Run2 samples, using the 106X release cycle.
-
+This is a [NanoAOD](https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookNanoAOD) framework for advanced developments of jet algorithms.
 
 The current full content of this development branch can be seen [here](https://annika-stein.web.cern.ch/PFNano/AddDeepJetTagInfo_desc.html) and the size [here](https://annika-stein.web.cern.ch/PFNano/AddDeepJetTagInfo_size.html).
 In this version, PFcandidates can be saved for AK4 only, AK8 only, or all the PF candidates. More below.
@@ -14,17 +11,6 @@ This format can be used with [fastjet](http://fastjet.fr) directly.
 **THIS IS A DEVELOPMENT BRANCH**
 
 For **UL** 2016, 2017 and 2018 data and MC **NanoAODv8** according to the [XPOG](https://gitlab.cern.ch/cms-nanoAOD/nanoaod-doc/-/wikis/Releases/NanoAODv8) and [PPD](https://twiki.cern.ch/twiki/bin/view/CMS/PdmVRun2LegacyAnalysisSummaryTable) recommendations:
-
-```
-cmsrel  CMSSW_10_6_20 # in principle not a constraint
-cd  CMSSW_10_6_20/src
-cmsenv
-git cms-rebase-topic andrzejnovak:614nosort
-git clone https://github.com/cms-jet/PFNano.git PhysicsTools/PFNano
-scram b -j 10
-cd PhysicsTools/PFNano/test
-```
-Note: When running over a new dataset you should check with [the nanoAOD workbook twiki](https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookNanoAOD#Running_on_various_datasets_from) to see if the era modifiers in the CRAB configuration files are correct. The jet correction versions are taken from the global tag.
 
 ## Local Usage:
 
@@ -143,21 +129,10 @@ submission yaml card `card_example.yml` are provided.
 When processing data, a lumi mask should be applied. The so called golden JSON should be applicable in most cases. Should also be checked here https://twiki.cern.ch/twiki/bin/view/CMS/PdmV
 
  * Golden JSON, UL
-```
-# 2017: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/Legacy_2017/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt
-# 2018: /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions18/13TeV/Legacy_2018/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt
-#
-```
+
 
  * Golden JSON, pre-UL
-```
-# 2016
-jsons/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt
-# 2017 
-jsons/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt
-# 2018
-jsons/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt
-```
+
 
 Include in `card.yml` for `crabby.py` submission. (In deprecated interactive submissiong add `--lumiMask jsons/...txt`)
 
