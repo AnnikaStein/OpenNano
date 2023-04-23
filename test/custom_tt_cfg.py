@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: --python_filename custom_tt_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM --fileout file:custom_tt_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO --filein file:tt_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n 1000 --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_allPF_add_CustomTagger_and_Truth
+# with command line options: --python_filename custom_tt_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM --fileout file:custom_tt_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO --filein file:tt_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n 100 --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_allPF_add_CustomTagger_and_Truth
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.Eras.Era_Run2_25ns_cff import Run2_25ns
@@ -23,7 +23,7 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1000)
+    input = cms.untracked.int32(100)
 )
 
 # Input source
@@ -38,7 +38,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('--python_filename nevts:1000'),
+    annotation = cms.untracked.string('--python_filename nevts:100'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )

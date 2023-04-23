@@ -1,181 +1,71 @@
-# PFNano
+# CMS Open Data for ML
 
-This is a [NanoAOD](https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookNanoAOD) framework for advanced developments of jet algorithms.
+This shows an exemplary way to read CMS Open Data MiniAOD, and end up with parquet files containing the data in the form of awkward arrays. This is a storage-friendly alternative to just saving in numpy / pandas etc. which would already fill empty or non-existing features (varying number of particles per event...) by padding with some placeholder value to create flat tuples.
 
-The current full content of this development branch can be seen [here](https://annika-stein.web.cern.ch/PFNano/AddDeepJetTagInfo_desc.html) and the size [here](https://annika-stein.web.cern.ch/PFNano/AddDeepJetTagInfo_size.html).
-In this version, PFcandidates can be saved for AK4 only, AK8 only, or all the PF candidates. More below.
-This format can be used with [fastjet](http://fastjet.fr) directly.
+Running on OpenData requires at least some CMS-software release to read and process the samples, packed in a virtual machine or from /cvmfs, if you have access. Then convert them to easier-to-process root-files, and make them usable by any deep learning framework.
 
-## Recipe
+## Overview
+### CMS-part
+The magic that needs to be done first:
 
-**THIS IS A DEVELOPMENT BRANCH**
-
-For **UL** 2016, 2017 and 2018 data and MC **NanoAODv8** according to the [XPOG](https://gitlab.cern.ch/cms-nanoAOD/nanoaod-doc/-/wikis/Releases/NanoAODv8) and [PPD](https://twiki.cern.ch/twiki/bin/view/CMS/PdmVRun2LegacyAnalysisSummaryTable) recommendations:
-
-## Local Usage:
-
-There are python config files ready to run in `PhysicsTools/PFNano/test/` for the UL campaign of nanoAODv8, named `nano106Xv8_on_mini106X_201*_data_NANO.py`. Notice that the current version can create different types of files depending on the PF candidates content.
-
-New since Pull Request [#39](https://github.com/cms-jet/PFNano/pull/39): Examples to include or exclude the input features for the DeepJet tagger are given in `nano106Xv8_on_mini106X_2017_mc_NANO.py`. Now the list of options that are currently implemented inside `pfnano_cff.py` (e.g. for MC) looks like that:
-```
-process = PFnano_customizeMC(process)
-#process = PFnano_customizeMC_add_DeepJet(process)                  ##### DeepJet inputs are added to the Jet collection
-#process = PFnano_customizeMC_allPF(process)                        ##### PFcands will content ALL the PF Cands
-#process = PFnano_customizeMC_allPF_add_DeepJet(process)            ##### PFcands will content ALL the PF Cands; + DeepJet inputs for Jets
-#process = PFnano_customizeMC_AK4JetsOnly(process)                  ##### PFcands will content only the AK4 jets PF cands
-#process = PFnano_customizeMC_AK4JetsOnly_add_DeepJet(process)      ##### PFcands will content only the AK4 jets PF cands; + DeepJet inputs for Jets
-#process = PFnano_customizeMC_AK8JetsOnly(process)                  ##### PFcands will content only the AK8 jets PF cands
-#process = PFnano_customizeMC_noInputs(process)                     ##### No PFcands but all the other content is available.
-```
-In general, whenever `_add_DeepJet` is specified (does not apply to `AK8JetsOnly` and `noInputs`), the DeepJet inputs are added to the Jet collection. For all other cases that involve adding tagger inputs, only DeepCSV and / or DDX are taken into account as default (= the old behaviour when `keepInputs=True`). Internally, this is handled by selecting a list of taggers, namely choosing from `DeepCSV`, `DeepJet`, and `DDX` (or an empty list for the `noInputs`-case, formerly done by setting `keepInputs=False`, now set `keepInputs=[]`). This refers to a change of the logic inside `pfnano_cff.py` and `addBTV.py`. If one wants to use this new flexibility, one can also define new customization functions with other combinations of taggers. Currently, there are all configurations to reproduce the ones that were available previously, and all configuations that extend the old ones by adding DeepJet inputs. DeepJet outputs, on top of the discriminators already present in NanoAOD, are added in any case where AK4Jets are added, i.e. there is no need to require the full set of inputs to get the individual output nodes / probabilities. The updated description using `PFnano_customizeMC_add_DeepJet` can be viewed [here](https://annika-stein.web.cern.ch/PFNano/AddDeepJetTagInfo_desc.html) and the size [here](https://annika-stein.web.cern.ch/PFNano/AddDeepJetTagInfo_size.html).
-
-The latest addition before moving to the Run3 recipe was the inclusion of a fine-grained truth flavour branch, which encodes various bits known from DeepNTuples into one integer. It can be activated for simulated samples by adding the `_and_Truth` flag to the customizer, i.e. using `PFnano_customizeMC_add_DeepJet_and_Truth`.
-
-### How to create python files using cmsDriver
-
-All python config files were produced with `cmsDriver.py`.
-
-Two imporant parameters that one needs to verify in the central nanoAOD documentation are `--conditions` and `--era`. 
-- `--era` options from [WorkBookNanoAOD](https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookNanoAOD) or [XPOG](https://gitlab.cern.ch/cms-nanoAOD/nanoaod-doc/-/wikis/Releases/NanoAODv8)
-- `--conditions` can be found here [PdMV](https://twiki.cern.ch/twiki/bin/view/CMS/PdmV)
-
-Pre UL `cmsRun` python config files are generated by running `make_configs_preUL.sh`
-
-```
-bash make_configs_preUL.sh  # run to only produce configs
-bash make_configs_preUL.sh  -e # run to actually execute configs on 1000 events
+```shell
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+cmsrel CMSSW_10_6_30
+cd CMSSW_10_6_30/src/
+cmsenv
+git cms-init
+git cms-merge-topic 39040
+git clone -b opendata git@github.com:AnnikaStein/OpenNano.git PhysicsTools/OpenNano
+scram b -j 18
 ```
 
-**UL `cmsRun` python config files are generated by running `make_configs_UL.sh`**
-
+Using cmsRun on a "non-official" site though means a local site-configuration is necessary. Let's trick `cmsRun` to think we are an actual site, despite working locally (getting lucky is not a crime, there appears to be a config for RWTH-HPC already):  
+```shell
+mkdir -p /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/SITECONF/local/JobConfig
+cp /cvmfs/cms.cern.ch/SITECONF/T2_DE_RWTH/RWTH-HPC/JobConfig/site-local-config.xml /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/SITECONF/local/JobConfig
+export CMS_PATH=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src
+scram b -j 18
 ```
-bash make_configs_UL.sh  # run to only produce configs
-bash make_configs_UL.sh  -e # run to actually execute configs on 1000 events
-```
+(kudos to https://twiki.cern.ch/twiki/bin/view/Main/RobinGitlabCICMSSW which is a similar use case)
 
-## Submission to CRAB
-
-For crab submission a handler script `crabby.py`, a crab baseline template `template_crab.py` and an example 
-submission yaml card `card_example.yml` are provided.
-
-- A single campaign (data/mc, year, config, output path) should be configured statically in a copy of `card_example.yml`.
-- To submit:
-  ```
-  source crab.sh
-  python crabby.py -c card.yml --make --submit
-  ```
-- `--make` and `--submit` calls are independent, allowing manual inspection of submit configs
-- Add `--test` to disable publication on otherwise publishable config and produce a single file per dataset
-
-<details>
-    <summary>If experiencing problems with crab submission using the above instructions, e.g. on NAF-DESY</summary>
-    
-    
-    ```
-    source /cvmfs/grid.cern.ch/centos7-umd4-ui-4_200423/etc/profile.d/setup-c7-ui-example.sh
-    source /cvmfs/cms.cern.ch/common/crab-setup.sh prod
-    source /cvmfs/cms.cern.ch/cmsset_default.sh
-    < navigate to CMSSW_X_Y_Z/src >
-    cmsenv
-    cd PhysicsTools/PFNano/test
-    ```
-    
-    
-    and proceed with `crabby.py` as explained above, activate proxy for submission to be successful.
-</details>
-
-<details>
-    <summary>Useful commands to get paths to individual processed files</summary>
-    
-    ```
-    xrdfs [insert redirector to site] ls /store/path/to/your/crab/output/serialnumber > filelist.txt
-    ( if there is more than one serial number (more than 1k files processed) repeat command but append to textfile using >> instead of > )
-    ( clean textfile for log entries )
-    ( then append the redirector (needs modification by you for specific site) using this helper )
-    python dataset_paths.py name_of_txt_file T2_DE_RWTH
-    ```
-    
-</details>
-
-<details>
-  <summary>Deprecated submission.</summary>
-    Samples can be submitted to crab using the `submit_all.py` script. Run with `-h` option to see usage. Example can look like this:
-
-    ```
-    python submit_all.py -c nano_config.py -s T2_DE_RWTH -f datasets/text_list.txt  -o /store/user/$USER/PFNano/  --ext test --test -d crab_noinpts
-
-    ```
-
-    For the UL datasets:
-    ```
-    ##python submit_all.py -c nano102x_on_mini94x_2016_mc_NANO.py  -f 2016mc_miniAODv3_DY.txt  -d NANO2016MC
-
-    python submit_all.py -c nano106Xv8_on_mini106X_2017_mc_NANO.py -f 2017mc_miniAODv2_DY.txt  -d NANO2017MC
-
-    python submit_all.py -c nano106Xv8_on_mini106X_2018_mc_NANO.py -f 2018mc_DY.txt  -d NANO2018MC
-
-
-    ##python submit_all.py -c nano102x_on_mini94x_2016_data_NANO.py -f 2016data_17Jul2018.txt -d NANO2016 -l Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt
-
-    python submit_all.py -c nano106Xv8_on_mini106X_2017_data_NANO.py -f 2017data_31Mar2018.txt  -d NANO2017 -l /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/Legacy_2017/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt 
-
-    python submit_all.py -c nano106Xv8_on_mini106X_2018_data_NANO.py -f datasets_2018D.txt -d NANO2018 -l /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions18/13TeV/Legacy_2018/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt 
-    ```
-</details>
-
-
-## Processing data
-
-When processing data, a lumi mask should be applied. The so called golden JSON should be applicable in most cases. Should also be checked here https://twiki.cern.ch/twiki/bin/view/CMS/PdmV
-
- * Golden JSON, UL
-
-
- * Golden JSON, pre-UL
-
-
-Include in `card.yml` for `crabby.py` submission. (In deprecated interactive submissiong add `--lumiMask jsons/...txt`)
-
-
-## How to create website with nanoAOD content
-
-To create nice websites like [this one](http://algomez.web.cern.ch/algomez/testWeb/JMECustomNano102x_mc_v01.html#Jet) with the content of nanoAOD, use the `inspectNanoFile.py` file from the `PhysicsTools/nanoAOD` package as:
-```
-python PhysicsTools/NanoAOD/test/inspectNanoFile.py NANOAOD.root -s website_with_collectionsize.html -d website_with_collectiondescription.html
+### Conda-Setup
+No conda setup yet? Then do
+```shell
+wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
 ```
 
-## Documenting the Extended NanoAOD Samples
+We will need to use some conda environment containing relevant packages.
+```shell
+conda env create -f env.yml
+```
 
-Please document the input and output datasets on the following twiki: https://twiki.cern.ch/twiki/bin/view/CMS/JetMET/JMARNanoAODv1. For the MC, the number of events can be found by looking up the output dataset in DAS. For the data, you will need to run brilcalc to get the total luminosity of the dataset. See the instructions below. 
+With the help of a conda environment, create a proxy (e.g. `voms-proxy-init --voms cms --vomses .grid-security/vomses --valid=192:00`) and copy the proxy into some accessible directory (`cp /tmp/x509up_u40434 /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS`)  
+Problems with that? Do
+```shell
+mkdir ~/.grid-security
+cp -r /cvmfs/grid.cern.ch/etc/grid-security/vomses ~/.grid-security
+cp -r /cvmfs/grid.cern.ch/etc/grid-security/vomsdir ~/.grid-security/
+```
+Now assume there already is a MiniAOD file (after doing `xrdcp`, or if you used the https-option of the opendata-client).  
+Example: `xrdcp root://eospublic.cern.ch//eos/opendata/cms/mc/RunIIFall15MiniAODv2/TTToSemiLeptonic_13TeV-powheg/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/00000/001CCEB6-4EC4-E511-B8DC-00259074AEAC.root /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/test/tt_miniaod.root`
+Then one can finally do:
+```shell
+cmsDriver.py --python_filename custom_tt_cfg.py --eventcontent NANOAODSIM --datatier NANOAODSIM \
+  --fileout file:custom_tt_nanoaod.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO \
+  --filein file:tt_miniaod.root --era Run2_25ns,run2_nanoAOD_106X2015 --no_exec --mc -n 100 \
+  --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_allPF_add_CustomTagger_and_Truth
+```
+
+and voilà: `cmsRun custom_tt_cfg.py` finally works, also inside a SLURM job.
+
+## Processing OpenNano
+The output of the previous step (a NanoAOD-like file) can be further processed, examples provided in `test/process_opennano.py`.
+
+### Do all steps (after initial setup) via SLURM
+It's convenient to have a set of files to run over, stored in a .txt file. Use something similar to that:
+`xrdfs eospublic.cern.ch ls /eos/opendata/cms/mc/RunIIFall15MiniAODv2/TTToSemiLeptonic_13TeV-powheg/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/00000 > samples_MiniAOD/ttsemi.txt`  
+Some hints: the running number 00000 is not necessarily the only one, look for the next ones in line like 00001... and if you want, concatenate them together into a super-txt file containing more than 1K lines / filepaths.
 
 
-## Running brilcalc
-These are condensed instructions from the lumi POG TWiki (https://twiki.cern.ch/twiki/bin/view/CMS/TWikiLUM). Also see the brilcalc quickstart guide: https://twiki.cern.ch/twiki/bin/viewauth/CMS/BrilcalcQuickStart.
-
-Note: brilcalc should be run on lxplus. It does not work on the lpc.
-
-Instructions:
-
-1.) Add the following lines to your .bashrc file (or equivalent for your shell). Don't forget to source this file afterwards!
-
-    export PATH=$HOME/.local/bin:/cvmfs/cms-bril.cern.ch/brilconda/bin:$PATH
-    export PATH=/afs/cern.ch/cms/lumi/brilconda-1.1.7/bin:$HOME/.local/bin:$PATH
-    
-2.) Install brilws:
-
-    pip install --install-option="--prefix=$HOME/.local" brilws
-    
-3.) Get the json file for your output dataset. In the area in which you submitted your jobs:
-
-    crab report -d [your crab directory]
-    
-The processedLumis.json file will tell you which lumi sections you successfully ran over. The lumi sections for incomplete, failed, or unpublished jobs are listed in notFinishedLumis.json, failedLumis.json, and notPublishedLumis.json. More info can be found at https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3Commands#crab_report.
-    
-4.) Run brilcalc on lxplus:
-
-    brilcalc lumi -i processedLumis.json -u /fb --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/normtag_PHYSICS.json -b "STABLE BEAMS"
-    
-The luminosity of interest will be listed under "totrecorded(/fb)." You can also run this over the other previously mentioned json files.
-    
-Note: '-b "STABLE BEAMS"' is optional if you've already run over the golden json. 
-        Using the normtag is NOT OPTIONAL, as it defines the final calibrations and detectors that are used for a given run.
+Now one would like to do all those steps without manually pasting such commands for every file. That's what `sbatch test/opennano_rocky_multiFile.sh` is for. A set of filelists can be stored in `samples_MiniAOD` for that purpose. And because OpenData does not require authentication as CMS member, this will even work without the active proxy.
