@@ -14,12 +14,12 @@
 #SBATCH --time=00:50:00
 
 
-#SBATCH --array=1-2
+#SBATCH --array=3-999
 
-#SBATCH --output=logs/output-%A_%a.txt
+#SBATCH --output=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/test/logs/output-%A_%a.txt
 
 
-# SBATCH --account=rwth1377
+#SBATCH --account=rwth1377
 
 
 #SBATCH --mail-type=ALL
@@ -43,7 +43,7 @@
     export XRD_RUNFORKHANDLER=1
     export X509_USER_PROXY=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/x509up_u40434
     export X509_CERT_DIR=/work/um106329/conda-storage/envs/OpenDataTorch/etc/grid-security/certificates
-    voms-proxy-info
+    # voms-proxy-info
     xrdcp root://eospublic.cern.ch/$INFILE $TMP/miniaod_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root
     if [[ $rc != 0 ]]
         then

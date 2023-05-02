@@ -4,7 +4,9 @@ This shows an exemplary way to read CMS Open Data MiniAOD, and end up with parqu
 
 Running on OpenData requires at least some CMS-software release to read and process the samples, packed in a virtual machine or from /cvmfs, if you have access. Then convert them to easier-to-process root-files, and make them usable by any deep learning framework.
 
-## Overview
+Tested (local + batch system) at RWTH HPC (CLAIX), tested local setup at lx3agpu.
+
+## Overview, local setup and example
 ### CMS-part
 The magic that needs to be done first:
 
@@ -15,9 +17,10 @@ cd CMSSW_10_6_30/src/
 cmsenv
 git cms-init
 git cms-merge-topic 39040
-git clone -b opendata git@github.com:AnnikaStein/OpenNano.git PhysicsTools/OpenNano
+git clone -b master git@github.com:ErUM-AISafety/OpenNano.git PhysicsTools/OpenNano
 scram b -j 18
 ```
+(If you encounter problems with cloning via ssh, either setup an ssh-key between the device and github.com, or try https instead, for the latter, replace `git@github.com:` with `https://github.com/`).
 
 Using cmsRun on a "non-official" site though means a local site-configuration is necessary. Let's trick `cmsRun` to think we are an actual site, despite working locally (getting lucky is not a crime, there appears to be a config for RWTH-HPC already):  
 ```shell
@@ -26,7 +29,7 @@ cp /cvmfs/cms.cern.ch/SITECONF/T2_DE_RWTH/RWTH-HPC/JobConfig/site-local-config.x
 export CMS_PATH=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src
 scram b -j 18
 ```
-(kudos to https://twiki.cern.ch/twiki/bin/view/Main/RobinGitlabCICMSSW which is a similar use case)
+(kudos to https://twiki.cern.ch/twiki/bin/view/Main/RobinGitlabCICMSSW which is a similar use case). Of course you need to modify these paths for your own filesystem.
 
 ### Conda-Setup
 No conda setup yet? Then do
@@ -35,18 +38,29 @@ wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
 ```
 
-We will need to use some conda environment containing relevant packages.
+We will need to use some conda environment containing relevant packages. The full suite is delivered with the repository and can be installed like so:
 ```shell
 conda env create -f env.yml
 ```
 
-With the help of a conda environment, create a proxy (e.g. `voms-proxy-init --voms cms --vomses .grid-security/vomses --valid=192:00`) and copy the proxy into some accessible directory (`cp /tmp/x509up_u40434 /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS`)  
-Problems with that? Do
-```shell
-mkdir ~/.grid-security
-cp -r /cvmfs/grid.cern.ch/etc/grid-security/vomses ~/.grid-security
-cp -r /cvmfs/grid.cern.ch/etc/grid-security/vomsdir ~/.grid-security/
-```
+<details><summary>Optional for CMS-members:</summary>
+    
+    
+> Optional (e.g. as CMS-member, not necessary at all): With the help of a conda environment and your certificate .pem in the `~/.globus` directory, create a proxy (e.g. `voms-proxy-init --voms cms --vomses .grid-security/vomses --valid=192:00`) and copy the proxy into some accessible directory (`cp /tmp/x509up_u40434 /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS`). This would allow you to use the framework also for official samples.  
+
+    
+> Problems with that? Do
+> ```shell
+> mkdir ~/.grid-security
+> cp -r /cvmfs/grid.cern.ch/etc/grid-security/vomses ~/.grid-security
+> cp -r /cvmfs/grid.cern.ch/etc/grid-security/vomsdir ~/.grid-security/
+> ```
+    
+</details>
+</br>
+
+
+### A first configuration with example file
 Now assume there already is a MiniAOD file (after doing `xrdcp`, or if you used the https-option of the opendata-client).  
 Example: `xrdcp root://eospublic.cern.ch//eos/opendata/cms/mc/RunIIFall15MiniAODv2/TTToSemiLeptonic_13TeV-powheg/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/00000/001CCEB6-4EC4-E511-B8DC-00259074AEAC.root /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/test/tt_miniaod.root`
 Then one can finally do:
@@ -59,13 +73,14 @@ cmsDriver.py --python_filename custom_tt_cfg.py --eventcontent NANOAODSIM --data
 
 and voilà: `cmsRun custom_tt_cfg.py` finally works, also inside a SLURM job.
 
-## Processing OpenNano
-The output of the previous step (a NanoAOD-like file) can be further processed, examples provided in `test/process_opennano.py`.
+## Processing OpenNano more systematically
+### From root to something else
+The output of the previous step (a NanoAOD-like root-file) can be further processed, examples provided in `test/process_opennano.py`.
 
-### Do all steps (after initial setup) via SLURM
+### Prepare dataset lists (to process batch-wise)
 It's convenient to have a set of files to run over, stored in a .txt file. Use something similar to that:
 `xrdfs eospublic.cern.ch ls /eos/opendata/cms/mc/RunIIFall15MiniAODv2/TTToSemiLeptonic_13TeV-powheg/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/00000 > samples_MiniAOD/ttsemi.txt`  
 Some hints: the running number 00000 is not necessarily the only one, look for the next ones in line like 00001... and if you want, concatenate them together into a super-txt file containing more than 1K lines / filepaths.
 
-
+### Do relevant steps (after initial setup) via SLURM
 Now one would like to do all those steps without manually pasting such commands for every file. That's what `sbatch test/opennano_rocky_multiFile.sh` is for. A set of filelists can be stored in `samples_MiniAOD` for that purpose. And because OpenData does not require authentication as CMS member, this will even work without the active proxy.
