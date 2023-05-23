@@ -99,3 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Batch job logs
+test/logs/output*.txt
+test/core*
