@@ -11,11 +11,11 @@
 
 
 # SBATCH --time=00:02:00  # For testing only
-#SBATCH --time=03:00:00  # Real jobs
+#SBATCH --time=02:00:00  # Real jobs
 
 
 #SBATCH --array=1  # For testing only
-# SBATCH --array=1-999  # Real jobs
+# SBATCH --array=2-368  # Real jobs
 
 #SBATCH --output=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/test/logs2/output-%A_%a.txt
 
