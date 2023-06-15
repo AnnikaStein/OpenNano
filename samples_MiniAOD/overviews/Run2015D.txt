@@ -1,0 +1,17 @@
+/eos/opendata/cms/Run2015D/BTagCSV
+/eos/opendata/cms/Run2015D/BTagMu
+/eos/opendata/cms/Run2015D/Charmonium
+/eos/opendata/cms/Run2015D/DisplacedJet
+/eos/opendata/cms/Run2015D/DoubleEG
+/eos/opendata/cms/Run2015D/DoubleMuon
+/eos/opendata/cms/Run2015D/DoubleMuonLowMass
+/eos/opendata/cms/Run2015D/HTMHT
+/eos/opendata/cms/Run2015D/JetHT
+/eos/opendata/cms/Run2015D/MET
+/eos/opendata/cms/Run2015D/MuOnia
+/eos/opendata/cms/Run2015D/MuonEG
+/eos/opendata/cms/Run2015D/SingleElectron
+/eos/opendata/cms/Run2015D/SingleMuon
+/eos/opendata/cms/Run2015D/SinglePhoton
+/eos/opendata/cms/Run2015D/Tau
+/eos/opendata/cms/Run2015D/ZeroBias

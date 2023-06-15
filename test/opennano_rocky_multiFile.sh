@@ -2,21 +2,22 @@
 
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
-# SBATCH --cpus-per-task=1
-#SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=1024M
+# SBATCH --cpus-per-task=1  # For testing only
+#SBATCH --cpus-per-task=10  # Real jobs
 
 # with/out gpu: 
 # SBATCH --gres=gpu:1
 
 
-# SBATCH --time=00:02:00
-#SBATCH --time=00:50:00
+# SBATCH --time=00:02:00  # For testing only
+#SBATCH --time=03:00:00  # Real jobs
 
 
-#SBATCH --array=3-999
+#SBATCH --array=1  # For testing only
+# SBATCH --array=1-999  # Real jobs
 
-#SBATCH --output=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/test/logs/output-%A_%a.txt
+#SBATCH --output=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/test/logs2/output-%A_%a.txt
 
 
 #SBATCH --account=rwth1377
@@ -26,12 +27,15 @@
 #SBATCH --mail-user=annika.stein@rwth-aachen.de
 
 
+# %% Run so far with: 
+# - ttsemi
+# - qcd_HT1000to15000
 
 # %% Bookkeeping
     echo "Welcome to SLURM_ARRAY_JOB_ID: $SLURM_ARRAY_JOB_ID and SLURM_ARRAY_TASK_ID: $SLURM_ARRAY_TASK_ID"
     echo "# ================= Create directory in /hpcwork and get file ================= #"
-    mkdir -p /hpcwork/rwth1377/OpenData/OpenNano/ttsemi_tests/custom_arrays_${SLURM_ARRAY_JOB_ID}
-    INFILE=$(sed -n ${SLURM_ARRAY_TASK_ID}p /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/samples_MiniAOD/ttsemi.txt)
+    mkdir -p /hpcwork/rwth1377/OpenData/OpenNano/qcd_HT1000to15000_tests/custom_arrays_${SLURM_ARRAY_JOB_ID}
+    INFILE=$(sed -n ${SLURM_ARRAY_TASK_ID}p /home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/CMSSW_10_6_30/src/PhysicsTools/OpenNano/samples_MiniAOD/qcd_HT1000to15000.txt)
     echo "Run over:" $INFILE
     echo "# ----------------- #"
     echo ""
@@ -41,8 +45,8 @@
     source ~/miniconda3/bin/activate
     conda activate OpenDataTorch
     export XRD_RUNFORKHANDLER=1
-    export X509_USER_PROXY=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/x509up_u40434
-    export X509_CERT_DIR=/work/um106329/conda-storage/envs/OpenDataTorch/etc/grid-security/certificates
+  #  export X509_USER_PROXY=/home/um106329/BMBF_AISafety/OpenDataAISafety/CMS/x509up_u40434
+  #  export X509_CERT_DIR=/work/um106329/conda-storage/envs/OpenDataTorch/etc/grid-security/certificates
     # voms-proxy-info
     xrdcp root://eospublic.cern.ch/$INFILE $TMP/miniaod_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root
     if [[ $rc != 0 ]]
@@ -65,7 +69,7 @@
     
     cmsDriver.py --python_filename $TMP/custom_cfg_job_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.py --eventcontent NANOAODSIM --datatier NANOAODSIM \
       --fileout file:$TMP/custom_nanoaod_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root --conditions 102X_mcRun2_asymptotic_v8 --step NANO \
-      --filein file:$TMP/miniaod_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root --era Run2_25ns,run2_nanoAOD_106X2015 --mc -n -1 --nThreads 8 \
+      --filein file:$TMP/miniaod_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root --era Run2_25ns,run2_nanoAOD_106X2015 --mc -n -1 --nThreads 10 \
       --customise PhysicsTools/OpenNano/opennano_cff.Opennano_customizeMC_allPF_add_CustomTagger_and_Truth \
       --customise_commands "process.add_(cms.Service('InitRootHandlers', EnableIMT = cms.untracked.bool(False)));process.MessageLogger.cerr.FwkReport.reportEvery=1000;"
     if [[ $rc != 0 ]]
@@ -84,7 +88,7 @@
     export PATH=/work/um106329/conda-storage/envs/OpenDataTorch/bin:/home/um106329/miniconda3/condabin:$PATH
     source ~/miniconda3/bin/activate
     conda activate OpenDataTorch
-    python3 process_opennano_parquet.py --fname_in=$TMP/custom_nanoaod_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root --fname_out_pattern=/hpcwork/rwth1377/OpenData/OpenNano/ttsemi_tests/custom_arrays_${SLURM_ARRAY_JOB_ID}/arrays_${SLURM_ARRAY_TASK_ID}
+    python3 process_opennano_parquet.py --fname_in=$TMP/custom_nanoaod_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.root --fname_out_pattern=/hpcwork/rwth1377/OpenData/OpenNano/qcd_HT1000to15000_tests/custom_arrays_${SLURM_ARRAY_JOB_ID}/arrays_${SLURM_ARRAY_TASK_ID}
     if [[ $rc != 0 ]]
         then
             echo "python3 process_opennano_parquet.py exit code: " $rc
